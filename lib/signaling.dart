@@ -4,14 +4,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 
-class Signaling{
-
+class Signaling {
   RTCPeerConnection? peerConnection;
   MediaStream? localStream;
   MediaStream? remoteStream;
   String? roomId;
   String? currentRoomText;
-  Function(dynamic)?  onAddRemoteStream;
+  Function(dynamic)? onAddRemoteStream;
 
   Map<String, dynamic> configuration = {
     'iceServers': [
@@ -245,18 +244,22 @@ class Signaling{
     };
   }
 
-  Future<void> getRooms()async {
+  Future<List<QueryDocumentSnapshot>> getRooms() async {
+    // Get docs from collection reference
+    CollectionReference _collectionRef =
+        FirebaseFirestore.instance.collection('rooms');
+    QuerySnapshot querySnapshot = await _collectionRef.get();
+
+    return querySnapshot.docs;
+  }
+
+  Future<void> delete() async {
+    // Get docs from collection reference
     CollectionReference _collectionRef =
     FirebaseFirestore.instance.collection('rooms');
-
-    Future<void> getData() async {
-      // Get docs from collection reference
-      QuerySnapshot querySnapshot = await _collectionRef.get();
-
-      // Get data from docs and convert map to List
-      final allData = querySnapshot.docs.map((doc) => doc.data()).toList();
-
-      print(allData);
+    QuerySnapshot querySnapshot = await _collectionRef.get();
+    for (var doc in querySnapshot.docs) {
+      await doc.reference.delete();
     }
   }
 }

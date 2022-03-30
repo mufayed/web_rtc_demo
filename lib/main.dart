@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
@@ -60,7 +61,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    signaling.getRooms();
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -106,11 +106,13 @@ class _MyHomePageState extends State<MyHomePage> {
                 leading: const Icon(Icons.add),
                 title: const Text('Create room'),
                 onTap: () async {
-                  Navigator.of(context).pop();
-                  signaling.openCamera(_localRenderer, _remoteRenderer);
-                  roomId = await signaling.createRoom();
-                  textEditingController.text = roomId!;
-                  setState(() {});
+                  if (roomId == null) {
+                    Navigator.of(context).pop();
+                    signaling.openCamera(_localRenderer, _remoteRenderer);
+                    roomId = await signaling.createRoom();
+                    textEditingController.text = roomId!;
+                    setState(() {});
+                  }
                 },
               ),
               ListTile(
@@ -118,16 +120,18 @@ class _MyHomePageState extends State<MyHomePage> {
                 title: const Text('Join room'),
                 onTap: () {
                   Navigator.of(context).pop();
-                  _showDialog();
+                  // _showDialog();
+                  _availableRooms();
                 },
               ),
               ListTile(
                 leading: const Icon(Icons.close),
                 title: const Text('End the connection'),
                 onTap: () {
+                  Navigator.of(context).pop();
                   roomId = null;
                   signaling.endConnection(_localRenderer);
-                  Navigator.of(context).pop();
+                  signaling.delete();
                 },
               ),
             ],
@@ -181,6 +185,44 @@ class _MyHomePageState extends State<MyHomePage> {
                             MaterialStateProperty.all(Colors.indigo)),
                   )
                 ],
+              ),
+            ),
+          );
+        });
+  }
+
+  _availableRooms() async {
+    List<QueryDocumentSnapshot> roomsList = await signaling.getRooms();
+
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text("Join room"),
+            content: SizedBox(
+              height: 200,
+              width: 200,
+              child: ListView.separated(
+                scrollDirection: Axis.vertical,
+                itemCount: roomsList.length,
+                separatorBuilder: (BuildContext context, int index) {
+                  return const SizedBox(
+                    height: 10,
+                  );
+                },
+                itemBuilder: (BuildContext context, int index) {
+                  return ListTile(
+                    title: Text(roomsList[index].id),
+                    onTap: () {
+                      if (roomId == null) {
+                        Navigator.of(context).pop();
+                        signaling.openCamera(_localRenderer, _remoteRenderer);
+                        setState(() {});
+                        signaling.joinRoom(roomsList[index].id);
+                      }
+                    },
+                  );
+                },
               ),
             ),
           );

@@ -24,6 +24,8 @@ class Signaling {
   };
 
   Future<String> createRoom() async {
+
+
     FirebaseFirestore db = FirebaseFirestore.instance;
     DocumentReference roomRef = db.collection('rooms').doc();
 
@@ -184,37 +186,32 @@ class Signaling {
     RTCVideoRenderer localVideo,
     RTCVideoRenderer remoteVideo,
   ) async {
+    final Map<String, dynamic> mediaConstraints = {
+      "audio": true,
+      "video": {
+        "facingMode": "user",
+        "optional": [],
+      }
+    };
     var stream = await navigator.mediaDevices
-        .getUserMedia({'video': true, 'audio': true});
+        .getUserMedia(mediaConstraints);
 
     localVideo.srcObject = stream;
     localStream = stream;
 
-    remoteVideo.srcObject = await createLocalMediaStream('key');
+    remoteVideo.srcObject = await createLocalMediaStream('demo');
   }
 
   Future<void> endConnection(RTCVideoRenderer localVideo) async {
     List<MediaStreamTrack> tracks = localVideo.srcObject!.getTracks();
-    tracks.forEach((track) {
+    for (var track in tracks) {
       track.stop();
-    });
+    }
 
     if (remoteStream != null) {
       remoteStream!.getTracks().forEach((track) => track.stop());
     }
     if (peerConnection != null) peerConnection!.close();
-
-    if (roomId != null) {
-      var db = FirebaseFirestore.instance;
-      var roomRef = db.collection('rooms').doc(roomId);
-      var calleeCandidates = await roomRef.collection('calleeCandidates').get();
-      calleeCandidates.docs.forEach((document) => document.reference.delete());
-
-      var callerCandidates = await roomRef.collection('callerCandidates').get();
-      callerCandidates.docs.forEach((document) => document.reference.delete());
-
-      await roomRef.delete();
-    }
 
     localStream!.dispose();
     remoteStream?.dispose();
@@ -245,7 +242,6 @@ class Signaling {
   }
 
   Future<List<QueryDocumentSnapshot>> getRooms() async {
-    // Get docs from collection reference
     CollectionReference _collectionRef =
         FirebaseFirestore.instance.collection('rooms');
     QuerySnapshot querySnapshot = await _collectionRef.get();
@@ -254,7 +250,6 @@ class Signaling {
   }
 
   Future<void> delete() async {
-    // Get docs from collection reference
     CollectionReference _collectionRef =
     FirebaseFirestore.instance.collection('rooms');
     QuerySnapshot querySnapshot = await _collectionRef.get();

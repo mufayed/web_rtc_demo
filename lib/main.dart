@@ -64,8 +64,8 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          "WebRTC",
-          style: TextStyle(fontSize: 14),
+          "WebRTC - Demo FirePhoenix",
+          style: TextStyle(fontSize: 13),
         ),
         centerTitle: true,
       ),
@@ -139,57 +139,6 @@ class _MyHomePageState extends State<MyHomePage> {
         });
   }
 
-  _showDialog() {
-    showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: const Text("Join room"),
-            content: SizedBox(
-              height: 150,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  TextFormField(
-                    controller: textEditingController,
-                    decoration: const InputDecoration(
-                        enabledBorder: OutlineInputBorder(
-                          // width: 0.0 produces a thin "hairline" border
-                          borderSide:
-                              BorderSide(color: Colors.indigo, width: 0.0),
-                        ),
-                        border: OutlineInputBorder(),
-                        labelStyle: TextStyle(color: Colors.indigo),
-                        hintText: 'Room ID'),
-                  ),
-                  const SizedBox(
-                    height: 10,
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      if (textEditingController.text.isNotEmpty) {
-                        Navigator.of(context).pop();
-                        signaling.openCamera(_localRenderer, _remoteRenderer);
-                        signaling.joinRoom(
-                          textEditingController.text,
-                        );
-                      }
-                    },
-                    child: const Text(
-                      'Join',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                    style: ButtonStyle(
-                        backgroundColor:
-                            MaterialStateProperty.all(Colors.indigo)),
-                  )
-                ],
-              ),
-            ),
-          );
-        });
-  }
 
   _availableRooms() async {
     List<QueryDocumentSnapshot> roomsList = await signaling.getRooms();
